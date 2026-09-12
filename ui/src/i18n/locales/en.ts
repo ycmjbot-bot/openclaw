@@ -5046,6 +5046,7 @@ export const en: TranslationMap & {
       sortBy: "Sort by",
       sortCreated: "Created",
       sortSessions: "Filter & sort",
+      sessionSources: "Session sources…",
       showOnlyPerson: "Show only {name}",
       showEveryone: "Show everyone",
       showAllSessions: "Show all sessions",
@@ -5053,7 +5054,8 @@ export const en: TranslationMap & {
       sessionMenu: "Actions for {session}",
       sessionMenuMany: "Actions for {count} sessions",
       toolActivity: "Using {tool}",
-      catalogDiscoveryHelp: "{error}. Configure native session discovery in Settings > Plugins.",
+      catalogDiscoveryHelp:
+        "{error}. Configure automatic session discovery in Settings > Appearance > Session sources.",
     },
     welcome: {
       hintBeforeShortcut: "Type a message below ·",

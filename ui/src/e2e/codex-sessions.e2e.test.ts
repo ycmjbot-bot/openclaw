@@ -686,6 +686,20 @@ suite.define(() => {
 
   it("explains node-list failures and exposes independent discovery settings", async () => {
     const page = await suite.browser.newPage({ viewport: { height: 1100, width: 1440 } });
+    const catalogEntrySchema = {
+      type: "object",
+      properties: {
+        config: {
+          type: "object",
+          properties: {
+            sessionCatalog: {
+              type: "object",
+              properties: { enabled: { type: "boolean", default: true } },
+            },
+          },
+        },
+      },
+    };
     await installMockGateway(page, {
       featureMethods: [
         "chat.metadata",
@@ -717,34 +731,8 @@ suite.define(() => {
                   entries: {
                     type: "object",
                     properties: {
-                      anthropic: {
-                        type: "object",
-                        properties: {
-                          config: {
-                            type: "object",
-                            properties: {
-                              sessionCatalog: {
-                                type: "object",
-                                properties: { enabled: { type: "boolean", default: true } },
-                              },
-                            },
-                          },
-                        },
-                      },
-                      codex: {
-                        type: "object",
-                        properties: {
-                          config: {
-                            type: "object",
-                            properties: {
-                              sessionCatalog: {
-                                type: "object",
-                                properties: { enabled: { type: "boolean", default: true } },
-                              },
-                            },
-                          },
-                        },
-                      },
+                      anthropic: catalogEntrySchema,
+                      codex: catalogEntrySchema,
                     },
                   },
                 },
@@ -816,7 +804,9 @@ suite.define(() => {
       await warning.waitFor({ state: "visible" });
       await expect.poll(() => tooltipTitleText(warning)).toContain("[NODE_LIST_FAILED]");
       await expect.poll(() => tooltipTitleText(warning)).toContain("pairing database is locked");
-      await expect.poll(() => tooltipTitleText(warning)).toContain("Settings > Plugins");
+      await expect
+        .poll(() => tooltipTitleText(warning))
+        .toContain("Settings > Appearance > Session sources");
       expect(await page.locator('[data-session-catalog-host="node:registry"]').count()).toBe(0);
 
       if (captureUiProofEnabled) {
