@@ -29,7 +29,11 @@ export class SessionCatalogListAdmission {
     }
   }
 
-  run<T>(task: () => Promise<T>): Promise<T> {
+  run<T>(task: () => Promise<T>, signal?: AbortSignal): Promise<T> {
+    if (signal?.aborted) {
+      // oxlint-disable-next-line typescript/prefer-promise-reject-errors -- AbortSignal preserves its exact reason, including non-Error values.
+      return Promise.reject(signal.reason);
+    }
     if (this.active < this.maxConcurrent) {
       return this.start(task);
     }
@@ -40,11 +44,28 @@ export class SessionCatalogListAdmission {
     // preceding provider's context inherited by the queue drain.
     const runInAsyncContext = AsyncLocalStorage.snapshot();
     return new Promise<T>((resolve, reject) => {
-      this.queue.push({
+      const queued: QueuedProviderList = {
         start: () => {
+          signal?.removeEventListener("abort", onAbort);
           void runInAsyncContext(() => this.start(task)).then(resolve, reject);
         },
-      });
+      };
+      const onAbort = () => {
+        const index = this.queue.indexOf(queued);
+        if (index < 0) {
+          return;
+        }
+        this.queue.splice(index, 1);
+        signal?.removeEventListener("abort", onAbort);
+        // oxlint-disable-next-line typescript/prefer-promise-reject-errors -- AbortSignal preserves its exact reason, including non-Error values.
+        reject(signal?.reason);
+      };
+      // Only waiting work can retire here; started providers own their physical completion.
+      this.queue.push(queued);
+      signal?.addEventListener("abort", onAbort, { once: true });
+      if (signal?.aborted) {
+        onAbort();
+      }
     });
   }
 
